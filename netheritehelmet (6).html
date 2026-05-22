@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Angielski – Fiszki & Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1d2e;
+    --bg2: #252840;
+    --card: #2e3250;
+    --card-hover: #333759;
+    --accent: #4255ff;
+    --accent-light: rgba(66,85,255,0.18);
+    --yellow: #ffcd1f;
+    --yellow-light: rgba(255,205,31,0.15);
+    --text: #ffffff;
+    --text-muted: #a8b4d8;
+    --text-faint: #6b7aa1;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.15);
+    --green: #23c55e;
+    --green-bg: rgba(35,197,94,0.15);
+    --green-border: rgba(35,197,94,0.5);
+    --red: #ff6b6b;
+    --red-bg: rgba(255,107,107,0.15);
+    --red-border: rgba(255,107,107,0.5);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.35);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding: 0 0 2rem; }
+
+  header { padding: 1.2rem 1.2rem 0.8rem; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+  .header-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--bg); background: var(--yellow); padding: 3px 10px; border-radius: 20px;
+  }
+  .header-title { font-size: 18px; font-weight: 700; color: var(--text); }
+
+  .mode-tabs { display: flex; gap: 6px; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 4px; }
+  .mode-tab { flex: 1; padding: 9px; border: none; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.18s; font-family: 'Inter', sans-serif; }
+  .mode-tab.active { background: var(--card); color: var(--text); box-shadow: 0 1px 8px rgba(0,0,0,0.3); }
+
+  .cat-scroll { display: flex; gap: 8px; padding: 0.8rem 1.2rem; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: wrap; }
+  .cat-scroll::-webkit-scrollbar { display: none; }
+  .cat-btn { flex-shrink: 0; padding: 7px 16px; border: 1px solid var(--border-strong); border-radius: 20px; background: transparent; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: 'Inter', sans-serif; }
+  .cat-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .quiz-type-row { display: flex; gap: 6px; padding: 0 1.2rem 0.8rem; }
+  .qt-btn { flex: 1; padding: 7px 8px; border: 1px solid var(--border-strong); border-radius: 20px; background: transparent; font-size: 12px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; text-align: center; font-family: 'Inter', sans-serif; }
+  .qt-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .content { flex: 1; padding: 0 1.2rem; }
+
+  #flash-view { display: flex; flex-direction: column; gap: 1rem; }
+  .progress-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 0.2rem; }
+  .progress-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--yellow); border-radius: 3px; transition: width 0.4s ease; }
+  .progress-label { font-size: 13px; color: var(--text-muted); min-width: 48px; text-align: right; }
+
+  .flashcard {
+    min-height: 240px; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem 1.5rem; text-align: center; position: relative;
+    transition: transform 0.15s, box-shadow 0.15s; user-select: none;
+  }
+  .flashcard:active { transform: scale(0.98); }
+  .fc-lang { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 1rem; }
+  .fc-word { font-size: 24px; font-weight: 600; line-height: 1.35; color: var(--text); }
+  .fc-answer { font-size: 20px; font-weight: 500; line-height: 1.4; color: var(--yellow); }
+  .fc-flip-hint { margin-top: 1.2rem; font-size: 12px; color: var(--text-faint); }
+
+  .fc-nav { display: flex; align-items: center; gap: 10px; }
+  .nav-btn {
+    flex: 1; padding: 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--card); font-size: 15px; color: var(--text); cursor: pointer;
+    font-weight: 500; transition: background 0.12s; font-family: 'Inter', sans-serif;
+  }
+  .nav-btn:active { background: var(--card-hover); }
+  .nav-center { font-size: 13px; color: var(--text-muted); min-width: 60px; text-align: center; }
+
+  .shuffle-btn {
+    width: 100%; padding: 12px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+    background: transparent; font-size: 13px; color: var(--text-muted); cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .shuffle-btn:active { background: rgba(255,255,255,0.04); }
+
+  #quiz-view { display: flex; flex-direction: column; gap: 1rem; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; }
+  .quiz-counter { font-size: 13px; color: var(--text-muted); }
+  .quiz-score-badge {
+    font-size: 13px; font-weight: 700; color: var(--bg); background: var(--yellow);
+    padding: 4px 12px; border-radius: 20px;
+  }
+
+  .quiz-progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+  .quiz-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
+
+  .quiz-question {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.5rem; box-shadow: var(--shadow);
+  }
+  .quiz-q-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 0.7rem; }
+  .quiz-q-word { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1.35; }
+
+  .quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-opt {
+    padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--card); font-size: 14px; color: var(--text); cursor: pointer;
+    text-align: left; line-height: 1.4; transition: all 0.15s; font-family: 'Inter', sans-serif;
+    font-weight: 400;
+  }
+  .quiz-opt:active:not(.locked) { background: var(--card-hover); border-color: var(--accent); }
+  .quiz-opt.correct { background: var(--green-bg) !important; border-color: var(--green-border) !important; color: var(--green) !important; font-weight: 600; }
+  .quiz-opt.wrong { background: var(--red-bg) !important; border-color: var(--red-border) !important; color: var(--red) !important; }
+  .quiz-opt.locked { cursor: default; pointer-events: none; }
+
+  .type-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .type-input {
+    width: 100%; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--card); font-size: 16px; color: var(--text); font-family: 'Inter', sans-serif;
+    outline: none; transition: border-color 0.15s;
+  }
+  .type-input::placeholder { color: var(--text-faint); }
+  .type-input:focus { border-color: var(--accent); }
+  .type-input.correct { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+  .type-input.wrong { background: var(--red-bg); border-color: var(--red-border); color: var(--red); }
+  .type-submit {
+    width: 100%; padding: 14px; background: var(--accent); border: none;
+    border-radius: var(--radius-sm); font-size: 15px; color: white; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity 0.15s;
+  }
+  .type-submit:active { opacity: 0.85; }
+  .type-reveal {
+    font-size: 14px; color: var(--text-muted); padding: 10px 14px;
+    background: var(--yellow-light); border-radius: var(--radius-sm); display: none;
+    border: 1px solid rgba(255,205,31,0.3);
+  }
+
+  .quiz-next-btn {
+    width: 100%; padding: 16px; background: var(--accent); border: none;
+    border-radius: var(--radius-sm); color: white; font-size: 16px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity 0.15s; display: none;
+  }
+  .quiz-next-btn:active { opacity: 0.85; }
+
+  .result-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 2.5rem 1.5rem; text-align: center; box-shadow: var(--shadow);
+  }
+  .result-emoji { font-size: 48px; margin-bottom: 1rem; }
+  .result-score { font-size: 56px; font-weight: 800; color: var(--yellow); line-height: 1; }
+  .result-total { font-size: 17px; color: var(--text-muted); margin-bottom: 0.5rem; margin-top: 4px; }
+  .result-msg { font-size: 15px; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5; }
+  .result-restart {
+    width: 100%; padding: 15px; background: var(--accent); border: none;
+    border-radius: var(--radius-sm); color: white; font-size: 16px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="header-top">
+      <span class="header-badge">EN ↔ PL</span>
+      <span class="header-title">Osobowość & Opisy</span>
+    </div>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="switchMode('flash')">📇 Fiszki</button>
+      <button class="mode-tab" onclick="switchMode('quiz')">🎯 Quiz</button>
+    </div>
+  </header>
+
+  <div class="cat-scroll" id="cat-scroll">
+    <button class="cat-btn active" onclick="setCat(0)">2.1 Cechy charakteru</button>
+    <button class="cat-btn" onclick="setCat(1)">2.4 Opisy i działania</button>
+    <button class="cat-btn" onclick="setCat(2)">Wszystkie</button>
+  </div>
+
+  <div class="quiz-type-row hidden" id="qt-row">
+    <button class="qt-btn active" id="qt-abcd" onclick="setQType('abcd')">🅰 ABCD</button>
+    <button class="qt-btn" id="qt-type" onclick="setQType('type')">⌨ Wpisz</button>
+    <button class="qt-btn" id="qt-mix" onclick="setQType('mix')">🔀 Mix</button>
+  </div>
+
+  <div class="content">
+    <div id="flash-view">
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="fc-prog"></div></div>
+        <div class="progress-label" id="fc-count">1 / 40</div>
+      </div>
+      <div class="flashcard" id="fc" onclick="flipCard()">
+        <div id="fc-front">
+          <div class="fc-lang">po polsku</div>
+          <div class="fc-word" id="fc-pl"></div>
+          <div class="fc-flip-hint">dotknij, żeby zobaczyć po angielsku</div>
+        </div>
+        <div id="fc-back" class="hidden">
+          <div class="fc-lang">po angielsku</div>
+          <div class="fc-answer" id="fc-en"></div>
+        </div>
+      </div>
+      <div class="fc-nav">
+        <button class="nav-btn" onclick="prevCard()">← Poprzednia</button>
+        <span class="nav-center" id="fc-nav-label"></span>
+        <button class="nav-btn" onclick="nextCard()">Następna →</button>
+      </div>
+      <button class="shuffle-btn" onclick="shuffleCards()">🔀 Losuj kolejność</button>
+    </div>
+
+    <div id="quiz-view" class="hidden">
+      <div class="quiz-header">
+        <span class="quiz-counter" id="q-counter">Pytanie 1 z 40</span>
+        <span class="quiz-score-badge" id="q-score-badge">0 pkt</span>
+      </div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="q-prog"></div></div>
+
+      <div class="quiz-question">
+        <div class="quiz-q-label">Jak powiedzieć po angielsku?</div>
+        <div class="quiz-q-word" id="q-word">—</div>
+      </div>
+
+      <div class="quiz-opts" id="q-opts"></div>
+
+      <div class="type-wrap hidden" id="q-type-wrap">
+        <input class="type-input" id="type-input" type="text" placeholder="Wpisz po angielsku..." autocomplete="off" autocorrect="off" spellcheck="false" />
+        <button class="type-submit" id="type-submit-btn" onclick="submitTyped()">Sprawdź</button>
+        <div class="type-reveal" id="type-reveal"></div>
+      </div>
+
+      <button class="quiz-next-btn" id="q-next" onclick="nextQuestion()">Następne pytanie →</button>
+
+      <div class="result-card hidden" id="q-result">
+        <div class="result-emoji" id="q-emoji">🎉</div>
+        <div class="result-score" id="q-final">0</div>
+        <div class="result-total" id="q-total">z 0 pytań</div>
+        <div class="result-msg" id="q-msg"></div>
+        <button class="result-restart" onclick="startQuiz()">Zagraj jeszcze raz</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// en field: primary answer used for ABCD display
+// alts: array of all accepted spellings/variants for typed mode
+const DATA = {
+  0: [
+    {pl:"śmiały, odważny",           en:"adventurous / daring",      alts:["adventurous","daring"]},
+    {pl:"uczuciowy, czuły",           en:"affectionate",              alts:["affectionate"]},
+    {pl:"miły, ciepły",               en:"agreeable",                 alts:["agreeable"]},
+    {pl:"osiągnąć znakomite wyniki",  en:"excel in",                  alts:["excel in","excel"]},
+    {pl:"sprawiedliwy, bezstronny",   en:"fair-minded",               alts:["fair-minded","fair minded"]},
+    {pl:"traktować coś poważnie",     en:"feel strongly about sth",   alts:["feel strongly about something","feel strongly"]},
+    {pl:"zarozumiały",                en:"be full of oneself",        alts:["full of oneself","be full of oneself"]},
+    {pl:"łagodny, dobroduszny",       en:"good-natured",              alts:["good-natured","good natured"]},
+    {pl:"mieć zamiłowanie do nauki",  en:"have a love of learning",   alts:["have a love of learning","love of learning"]},
+    {pl:"uczciwy, szczery",           en:"honest",                    alts:["honest"]},
+    {pl:"beznadziejny",               en:"hopeless",                  alts:["hopeless"]},
+    {pl:"skromny, pełen pokory",      en:"humble",                    alts:["humble"]},
+    {pl:"pomysłowy, o bujnej wyobraźni", en:"imaginative",            alts:["imaginative"]},
+    {pl:"niepewny siebie",            en:"insecure",                  alts:["insecure"]},
+    {pl:"intelektualista",            en:"intellectual",              alts:["intellectual"]},
+    {pl:"życzliwy, o dobrym sercu",   en:"kind-hearted",              alts:["kind-hearted","kind hearted"]},
+    {pl:"wyluzowany, niefrasobliwy",  en:"laid-back",                 alts:["laid-back","laid back"]},
+    {pl:"imponujący",                 en:"larger than life",          alts:["larger than life"]},
+    {pl:"opanowany, zrównoważony",    en:"level-headed",              alts:["level-headed","level headed"]},
+    {pl:"sprawiać, że ktoś czuje się swobodnie", en:"make sb feel at ease", alts:["make somebody feel at ease","make someone feel at ease","feel at ease"]},
+    {pl:"humorzasty, kapryśny",       en:"moody",                     alts:["moody"]},
+    {pl:"imprezować",                 en:"party",                     alts:["party"]},
+    {pl:"zwracać uwagę na szczegóły", en:"pay attention to detail",   alts:["pay attention to detail"]},
+    {pl:"wnikliwy, spostrzegawczy",   en:"perceptive",                alts:["perceptive"]},
+    {pl:"planować z wyprzedzeniem",   en:"plan in advance",           alts:["plan in advance"]},
+    {pl:"egocentryczny",              en:"self-centred",              alts:["self-centred","self-centered"]},
+    {pl:"skrępowany, nieśmiały",      en:"self-conscious",            alts:["self-conscious"]},
+    {pl:"krytyczny wobec siebie",     en:"self-critical",             alts:["self-critical"]},
+    {pl:"wybuchowy, porywczy",        en:"short-tempered",            alts:["short-tempered","short tempered"]},
+    {pl:"pogawędka, rozmowa o błahostkach", en:"small talk",          alts:["small talk"]},
+    {pl:"towarzyski",                 en:"sociable",                  alts:["sociable"]},
+    {pl:"wypowiadać się w jakiejś sprawie", en:"speak up",            alts:["speak up"]},
+    {pl:"spontaniczny",               en:"spontaneous",               alts:["spontaneous"]},
+    {pl:"zdeterminowany, o silnym charakterze", en:"strong-willed",   alts:["strong-willed","strong willed"]},
+    {pl:"taktowny, grzeczny",         en:"tactful",                   alts:["tactful"]},
+    {pl:"dusza towarzystwa",          en:"the life and soul of the party", alts:["the life and soul of the party","life and soul of the party"]},
+    {pl:"myśleć twórczo, kreatywnie", en:"think outside the box",     alts:["think outside the box"]},
+    {pl:"dokładny, skrupulatny",      en:"thorough",                  alts:["thorough"]},
+    {pl:"ufny",                       en:"trusting",                  alts:["trusting"]},
+    {pl:"bystry, błyskotliwy, dowcipny", en:"witty",                  alts:["witty"]},
+  ],
+  1: [
+    {pl:"poprawiać, dopasować",       en:"adjust",                    alts:["adjust"]},
+    {pl:"pełen bólu i cierpienia",    en:"agonizing",                 alts:["agonizing","agonising"]},
+    {pl:"zdumienie, zdziwienie",      en:"astonishment",              alts:["astonishment"]},
+    {pl:"kawalerka",                  en:"bachelor pad",              alts:["bachelor pad"]},
+    {pl:"być w stanie coś zrobić",    en:"be up to something",        alts:["be up to something","up to something"]},
+    {pl:"schylić się, zgiąć",         en:"bend",                      alts:["bend"]},
+    {pl:"mrożący krew w żyłach",      en:"bloodcurdling",             alts:["bloodcurdling"]},
+    {pl:"sukces kasowy",              en:"box-office success",        alts:["box-office success","box office success"]},
+    {pl:"rozweselać się, rozpogadzać", en:"brighten",                 alts:["brighten"]},
+    {pl:"wyraźny, silny akcent",      en:"broad accent",              alts:["broad accent"]},
+    {pl:"opiekun",                    en:"carer",                     alts:["carer"]},
+    {pl:"klatka piersiowa",           en:"chest",                     alts:["chest"]},
+    {pl:"bez kołnierzyka",            en:"collarless",                alts:["collarless"]},
+    {pl:"z pewnością siebie",         en:"confidently",               alts:["confidently"]},
+    {pl:"skrzywiony",                 en:"contorted",                 alts:["contorted"]},
+    {pl:"szpara, pęknięcie",          en:"crack",                     alts:["crack"]},
+    {pl:"kucnąć",                     en:"crouch down",               alts:["crouch down","crouch"]},
+    {pl:"wyłożony poduszkami",        en:"cushioned",                 alts:["cushioned"]},
+    {pl:"niesłyszący",                en:"deaf",                      alts:["deaf"]},
+    {pl:"ubrany (nie nagi)",          en:"decent",                    alts:["decent"]},
+    {pl:"złudnie, zwodniczo",         en:"deceptively",               alts:["deceptively"]},
+    {pl:"zachwyt, przyjemność",       en:"delight",                   alts:["delight"]},
+    {pl:"niesamodzielny",             en:"dependent",                 alts:["dependent"]},
+    {pl:"niepełnosprawny",            en:"disabled",                  alts:["disabled"]},
+    {pl:"wyłonić się, pojawić się",   en:"emerge",                    alts:["emerge"]},
+    {pl:"całkowicie",                 en:"entirely",                  alts:["entirely"]},
+    {pl:"stawiać czoła wyzwaniu",     en:"face a challenge",          alts:["face a challenge"]},
+    {pl:"nikły",                      en:"faint",                     alts:["faint"]},
+    {pl:"słaby",                      en:"feeble",                    alts:["feeble"]},
+    {pl:"płot",                       en:"fence",                     alts:["fence"]},
+    {pl:"znaleźć wspólny język",      en:"find common ground",        alts:["find common ground"]},
+    {pl:"stanowczo, pewnie",          en:"firmly",                    alts:["firmly"]},
+    {pl:"przemknąć przez, mignąć",    en:"flicker across",            alts:["flicker across","flicker"]},
+    {pl:"wzdrygnąć się",              en:"flinch",                    alts:["flinch"]},
+    {pl:"podnóżek",                   en:"footrest",                  alts:["footrest"]},
+    {pl:"kątem oka",                  en:"from the corner of your eye", alts:["from the corner of your eye","corner of your eye"]},
+    {pl:"umeblowany",                 en:"furnished",                 alts:["furnished"]},
+    {pl:"wpatrywać się",              en:"gaze",                      alts:["gaze"]},
+    {pl:"wplątać się w",              en:"get yourself into",         alts:["get yourself into","get into"]},
+    {pl:"pomachać",                   en:"give a wave",               alts:["give a wave","wave"]},
+    {pl:"spojrzeć, rzucić okiem",     en:"glance",                    alts:["glance"]},
+    {pl:"zerknąć, mignąć",            en:"glimpse",                   alts:["glimpse"]},
+    {pl:"dobre towarzystwo",          en:"good company",              alts:["good company"]},
+    {pl:"skrzywić się",               en:"grimace",                   alts:["grimace"]},
+    {pl:"chwytać, ściskać",           en:"grip",                      alts:["grip"]},
+    {pl:"nie mieć nic wspólnego",     en:"have nothing in common",    alts:["have nothing in common","nothing in common"]},
+    {pl:"wahać się",                  en:"hesitate",                  alts:["hesitate"]},
+    {pl:"dziurka od klucza",          en:"keyhole",                   alts:["keyhole"]},
+    {pl:"kłykieć",                    en:"knuckle",                   alts:["knuckle"]},
+    {pl:"wydać jęk",                  en:"let out a groan",           alts:["let out a groan","groan"]},
+    {pl:"postarać się coś zrobić",    en:"make an effort",            alts:["make an effort"]},
+    {pl:"sterować, manewrować",       en:"manipulate",                alts:["manipulate"]},
+    {pl:"opiekun",                    en:"minder",                    alts:["minder"]},
+    {pl:"neurotyczny, znerwicowany",  en:"neurotic",                  alts:["neurotic"]},
+    {pl:"fragment",                   en:"passage",                   alts:["passage"]},
+    {pl:"spokojny",                   en:"peaceful",                  alts:["peaceful"]},
+    {pl:"podglądać",                  en:"peep",                      alts:["peep"]},
+    {pl:"przyglądać się bacznie",     en:"peer",                      alts:["peer"]},
+    {pl:"umieszczać",                 en:"position",                  alts:["position"]},
+    {pl:"przepychać się",             en:"push through",              alts:["push through"]},
+    {pl:"założyć komuś chwyt zapaśniczy", en:"put somebody in a head-lock", alts:["put somebody in a head-lock","put someone in a head-lock","headlock","head-lock"]},
+    {pl:"scenarzysta",                en:"screenwriter",              alts:["screenwriter"]},
+    {pl:"kitel",                      en:"scrubs",                    alts:["scrubs"]},
+    {pl:"rozczochrany, kudłaty",      en:"shaggy",                    alts:["shaggy"]},
+    {pl:"barania skóra",              en:"sheepskin",                 alts:["sheepskin"]},
+    {pl:"dobrze zbudowany",           en:"solidly built",             alts:["solidly built"]},
+    {pl:"przestronny",                en:"spacious",                  alts:["spacious"]},
+    {pl:"gapić się",                  en:"stare",                     alts:["stare"]},
+    {pl:"uważnie, bacznie",           en:"steadily",                  alts:["steadily"]},
+    {pl:"zesztywnieć",                en:"stiffen",                   alts:["stiffen"]},
+    {pl:"wyprostować",                en:"straighten",                alts:["straighten"]},
+    {pl:"przełykać",                  en:"swallow",                   alts:["swallow"]},
+    {pl:"elegancki, w dobrym guście", en:"tasteful",                  alts:["tasteful"]},
+    {pl:"przechylać",                 en:"tilt",                      alts:["tilt"]},
+    {pl:"drżący",                     en:"tremulous",                 alts:["tremulous"]},
+    {pl:"wykrzywić usta",             en:"twist your mouth",          alts:["twist your mouth","twist mouth"]},
+    {pl:"nietypowo",                  en:"uncharacteristically",      alts:["uncharacteristically"]},
+    {pl:"nieludzki",                  en:"unearthly",                 alts:["unearthly"]},
+    {pl:"potargany, nieuczesany",     en:"unkempt",                   alts:["unkempt"]},
+    {pl:"zastanawiać się",            en:"wonder",                    alts:["wonder"]},
+    {pl:"kominek opalany drewnem",    en:"wood burner",               alts:["wood burner","wood-burner"]},
+    {pl:"wełniana narzuta",           en:"wool throw",                alts:["wool throw"]},
+  ]
+};
+
+function getCards(c) {
+  if (c === 2) return [...DATA[0], ...DATA[1]];
+  return [...DATA[c]];
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let mode = 'flash', cat = 0, qType = 'abcd';
+let cards = [], idx = 0, flipped = false;
+let qCards = [], qIdx = 0, qScore = 0;
+let qTypes = [];
+
+function initFlash() {
+  cards = getCards(cat);
+  idx = 0; flipped = false;
+  renderCard();
+}
+
+function renderCard() {
+  const c = cards[idx];
+  document.getElementById('fc-pl').textContent = c.pl;
+  document.getElementById('fc-en').textContent = c.en;
+  document.getElementById('fc-front').classList.remove('hidden');
+  document.getElementById('fc-back').classList.add('hidden');
+  flipped = false;
+  const total = cards.length;
+  document.getElementById('fc-count').textContent = (idx+1) + ' / ' + total;
+  document.getElementById('fc-prog').style.width = ((idx+1)/total*100) + '%';
+}
+
+function flipCard() {
+  flipped = !flipped;
+  document.getElementById('fc-front').classList.toggle('hidden', flipped);
+  document.getElementById('fc-back').classList.toggle('hidden', !flipped);
+}
+
+function nextCard() { idx = (idx + 1) % cards.length; renderCard(); }
+function prevCard() { idx = (idx - 1 + cards.length) % cards.length; renderCard(); }
+function shuffleCards() { cards = shuffle(cards); idx = 0; renderCard(); }
+
+function setQType(t) {
+  qType = t;
+  document.querySelectorAll('.qt-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('qt-' + t).classList.add('active');
+  startQuiz();
+}
+
+function startQuiz() {
+  qCards = shuffle(getCards(cat));
+  qIdx = 0; qScore = 0;
+  if (qType === 'mix') {
+    qTypes = qCards.map(() => Math.random() < 0.5 ? 'abcd' : 'type');
+  }
+  document.getElementById('q-result').classList.add('hidden');
+  document.getElementById('q-opts').classList.remove('hidden');
+  document.getElementById('q-type-wrap').classList.add('hidden');
+  document.getElementById('q-next').style.display = 'none';
+  renderQuestion();
+}
+
+function currentQType() {
+  if (qType === 'mix') return qTypes[qIdx];
+  return qType;
+}
+
+function renderQuestion() {
+  const total = qCards.length;
+  document.getElementById('q-counter').textContent = 'Pytanie ' + (qIdx+1) + ' z ' + total;
+  document.getElementById('q-score-badge').textContent = qScore + ' pkt';
+  document.getElementById('q-prog').style.width = (qIdx/total*100) + '%';
+  document.getElementById('q-next').style.display = 'none';
+
+  const c = qCards[qIdx];
+  document.getElementById('q-word').textContent = c.pl;
+
+  const ct = currentQType();
+
+  if (ct === 'abcd') {
+    document.getElementById('q-opts').classList.remove('hidden');
+    document.getElementById('q-type-wrap').classList.add('hidden');
+
+    const pool = shuffle(getCards(cat).filter(x => x.en !== c.en));
+    let opts = [c];
+    for (let i = 0; i < 3 && i < pool.length; i++) opts.push(pool[i]);
+    opts = shuffle(opts);
+
+    const container = document.getElementById('q-opts');
+    container.innerHTML = '';
+    opts.forEach(o => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-opt';
+      btn.textContent = o.en;
+      btn.addEventListener('click', () => selectOpt(btn, o.en === c.en, c));
+      container.appendChild(btn);
+    });
+  } else {
+    document.getElementById('q-opts').classList.add('hidden');
+    document.getElementById('q-type-wrap').classList.remove('hidden');
+    const inp = document.getElementById('type-input');
+    inp.value = '';
+    inp.className = 'type-input';
+    inp.disabled = false;
+    document.getElementById('type-submit-btn').style.display = 'block';
+    document.getElementById('type-reveal').style.display = 'none';
+    setTimeout(() => inp.focus(), 100);
+    inp.onkeydown = (e) => { if (e.key === 'Enter') submitTyped(); };
+  }
+}
+
+function norm(s) {
+  return s.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '');
+}
+
+function submitTyped() {
+  const c = qCards[qIdx];
+  const inp = document.getElementById('type-input');
+  const val = inp.value.trim();
+  if (!val) return;
+
+  inp.disabled = true;
+  document.getElementById('type-submit-btn').style.display = 'none';
+
+  const given = norm(val);
+  const isOk = c.alts.some(a => norm(a) === given);
+
+  inp.classList.add(isOk ? 'correct' : 'wrong');
+  if (isOk) {
+    qScore++;
+    document.getElementById('q-score-badge').textContent = qScore + ' pkt';
+  } else {
+    const rev = document.getElementById('type-reveal');
+    rev.textContent = 'Poprawna odpowiedź: ' + c.en;
+    rev.style.display = 'block';
+  }
+  document.getElementById('q-next').style.display = 'block';
+}
+
+function selectOpt(btn, isCorrect, correct) {
+  document.querySelectorAll('.quiz-opt').forEach(b => b.classList.add('locked'));
+  if (isCorrect) {
+    btn.classList.add('correct');
+    qScore++;
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.quiz-opt').forEach(b => {
+      if (b.textContent === correct.en) b.classList.add('correct');
+    });
+  }
+  document.getElementById('q-next').style.display = 'block';
+  document.getElementById('q-score-badge').textContent = qScore + ' pkt';
+}
+
+function nextQuestion() {
+  qIdx++;
+  if (qIdx >= qCards.length) showResult();
+  else renderQuestion();
+}
+
+function showResult() {
+  document.getElementById('q-opts').classList.add('hidden');
+  document.getElementById('q-type-wrap').classList.add('hidden');
+  document.getElementById('q-next').style.display = 'none';
+  const total = qCards.length;
+  const pct = Math.round(qScore / total * 100);
+  document.getElementById('q-final').textContent = qScore;
+  document.getElementById('q-total').textContent = 'z ' + total + ' pytań (' + pct + '%)';
+  let emoji, msg;
+  if (pct === 100) { emoji = '🏆'; msg = 'Perfekcyjnie! Wszystkie słówka opanowane!'; }
+  else if (pct >= 80) { emoji = '🎉'; msg = 'Świetny wynik! Jeszcze trochę i będzie ideał.'; }
+  else if (pct >= 60) { emoji = '👍'; msg = 'Nieźle! Warto powtórzyć słabsze słówka.'; }
+  else { emoji = '💪'; msg = 'Trzeba poćwiczyć! Spróbuj najpierw z fiszkami.'; }
+  document.getElementById('q-emoji').textContent = emoji;
+  document.getElementById('q-msg').textContent = msg;
+  document.getElementById('q-result').classList.remove('hidden');
+  document.getElementById('q-counter').textContent = 'Wynik końcowy';
+  document.getElementById('q-prog').style.width = '100%';
+}
+
+function setCat(c) {
+  cat = c;
+  document.querySelectorAll('.cat-btn').forEach((el, i) => el.classList.toggle('active', i === c));
+  if (mode === 'flash') initFlash(); else startQuiz();
+}
+
+function switchMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-tab').forEach((el, i) => el.classList.toggle('active', (i===0&&m==='flash')||(i===1&&m==='quiz')));
+  document.getElementById('flash-view').classList.toggle('hidden', m !== 'flash');
+  document.getElementById('quiz-view').classList.toggle('hidden', m !== 'quiz');
+  document.getElementById('qt-row').classList.toggle('hidden', m !== 'quiz');
+  if (m === 'flash') initFlash(); else startQuiz();
+}
+
+initFlash();
+</script>
+</body>
+</html>
